@@ -16,13 +16,21 @@ The models can be downloaded using `model downloader`. To download a model, navi
 `cd /opt/intel/openvino/deployment_tools/open_model_zoo/tools/downloader` . 
 Use `--name` argument for model name, `-o` argument to specify your output directory
 
-***Download Face Detection model***
+**Download Face Detection model**
 
     sudo ./downloader.py --name face-detection-adas-binary-0001 -o /home/anga/Documents/Pointer_Control/models
 
-***Download Head Pose Estimation model***
+**Download Head Pose Estimation model**
 
     sudo ./downloader.py --name head-pose-estimation-adas-0001 -o /home/anga/Documents/Pointer_Control/models
+
+**Download Facial Landmarks Detection model**
+
+    sudo ./downloader.py --name landmarks-regression-retail-0009 -o /home/anga/Documents/Pointer_Control/models
+    
+**Download Gaze Estimation model**
+
+    sudo ./downloader.py --name gaze-estimation-adas-0002 -o /home/anga/Documents/Pointer_Control/models
 
 ## Demo
 *TODO:* Explain how to run a basic demo of your model.
