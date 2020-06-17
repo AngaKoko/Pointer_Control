@@ -32,6 +32,13 @@ Use `--name` argument for model name, `-o` argument to specify your output direc
 
     sudo ./downloader.py --name gaze-estimation-adas-0002 -o /home/anga/Documents/Pointer_Control/models
 
+## Install Dependencies
+**Numpy**
+
+    pip3 install numpy
+
+
+
 ## Demo
 *TODO:* Explain how to run a basic demo of your model.
 
