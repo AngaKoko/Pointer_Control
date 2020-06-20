@@ -20,7 +20,7 @@ class Head_Pose_Estimation:
         try:
             self.model=IENetwork(self.model_structure, self.model_weights)
         except Exception as e:
-            raise ValueError("Could not Initialise the network. Check if modeld path is correct")
+            raise ValueError("Could not Initialise the network. Check if modeld path is correct", e)
 
         self.input_name=next(iter(self.model.inputs))
         self.input_shape=self.model.inputs[self.input_name].shape
@@ -43,11 +43,11 @@ class Head_Pose_Estimation:
         # Wait for the result
         if net.requests[0].wait(-1) == 0:
             #get out put
-            output = net.requests[0].outputs[self.output_name]
+            outputs = net.infer({self.input_name:processed_image})
             
-            estimation["angle_y_fc"] = output[0][0]
-            estimation["angle_p_fc"] = output[0][0]
-            estimation["angle_r_fc"] = output[0][0]
+            estimation["angle_y_fc"] = outputs['angle_y_fc'].tolist()[0][0]
+            estimation["angle_p_fc"] = outputs['angle_p_fc'].tolist()[0][0]
+            estimation["angle_r_fc"] = outputs['angle_r_fc'].tolist()[0][0]
         
         return estimation
 
