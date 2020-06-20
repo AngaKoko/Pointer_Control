@@ -1,46 +1,69 @@
-'''
-This is a sample class for a model. You may choose to use it as-is or make any changes to it.
-This has been provided just to give you an idea of how to structure your model class.
-'''
+import time
+from openvino.inference_engine import IENetwork, IECore
+import cv2
+import math
 
-class Model_X:
+class Gaze_Estimation:
     '''
     Class for the Face Detection Model.
     '''
     def __init__(self, model_name, device='CPU', extensions=None):
-        '''
-        TODO: Use this to set your instance variables.
-        '''
-        raise NotImplementedError
+        self.model_weights=model_name+'.bin'
+        self.model_structure=model_name+'.xml'
+        self.device=device
+        self.extensions = extensions
+
+        try:
+            self.model=IENetwork(self.model_structure, self.model_weights)
+        except Exception as e:
+            raise ValueError("Could not Initialise the network. Check if modeld path is correct")
+
+        self.input_name=next(iter(self.model.inputs))
+        self.input_shape=self.model.inputs[self.input_name].shape
+        self.output_name=next(iter(self.model.outputs))
+        self.output_shape=self.model.outputs[self.output_name].shape
 
     def load_model(self):
-        '''
-        TODO: You will need to complete this method.
-        This method is for loading the model to the device specified by the user.
-        If your model requires any Plugins, this is where you can load them.
-        '''
-        raise NotImplementedError
+        global net
+        #load the model using IECore()
+        core = IECore()
+        net = core.load_network(network=self.model, device_name=self.device, num_requests=1)
+        
+        return net
 
-    def predict(self, image):
-        '''
-        TODO: You will need to complete this method.
-        This method is meant for running predictions on the input image.
-        '''
-        raise NotImplementedError
+    def predict(self, left_eye_image, right_eye_image, pose_angles):
+        #Process images
+        processed_left_eye_image = self.preprocess_input(left_eye_image)
+        processed_righ_eye_image = self.preprocess_input(right_eye_image)
+
+        #get ouput from net
+        outputs = net.infer({"head_pose_angles":pose_angles, "left_eye_image":processed_left_eye_image, "right_eye_image":processed_righ_eye_image})
+        #Get new mouse co-ordinate and gaze vector
+        mouse_coordinate, gaze_vector = self.preprocess_output(outputs, pose_angles)
+        #return new mouse co-ordinate and gaze vector
+        return mouse_coordinate, gaze_vector
+        
 
     def check_model(self):
         raise NotImplementedError
 
     def preprocess_input(self, image):
-    '''
-    Before feeding the data into the model for inference,
-    you might have to preprocess it. This function is where you can do that.
-    '''
-        raise NotImplementedError
+        #Get Input shape 
+        n, c, h, w = self.model.inputs[self.input_name].shape
 
-    def preprocess_output(self, outputs):
-    '''
-    Before feeding the output of this model to the next model,
-    you might have to preprocess the output. This function is where you can do that.
-    '''
-        raise NotImplementedError
+        #Pre-process the image ###
+        image = cv2.resize(image, (w, h))
+        image = image.transpose((2, 0, 1))
+        image = image.reshape((n, c, h, w))
+        
+        return image
+
+    def preprocess_output(self, outputs, pose_angles):
+        gaze_vector = outputs[self.output_name[0]].tolist()[0]
+        roll_angle = pose_angles["angle_r_fc"]
+        cos = math.cos(roll_angle * math.pi / 180.0)
+        sin = math.sin(roll_angle * math.pi / 180.0)
+        
+        x = gaze_vector[0] * cos + gaze_vector[1] * sin
+        y = -gaze_vector[0] *  sin+ gaze_vector[1] * cos
+        return (x,y), gaze_vector
