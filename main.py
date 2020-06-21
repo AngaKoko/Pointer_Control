@@ -101,7 +101,7 @@ def main(args):
             #increament counter
             counter += 1
 
-            coords, image= fd.predict(frame)
+            image= fd.predict(frame)
 
             ### Write an output image if `single_image_mode` ###
             ### Send the frame to the FFMPEG server ###

@@ -56,6 +56,7 @@ class Model_Face_Detection:
         initial_h = image.shape[0]
         initial_w = image.shape[1]
         bounding_box = []
+        cropped_image = image
         for value in coords:
             # Draw bounding box on detected objects
             xmin = int(value[3] * initial_w)
@@ -64,7 +65,8 @@ class Model_Face_Detection:
             ymax = int(value[6] * initial_h)
             cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0,55,255), 2)
             bounding_box.append([xmin, ymin, xmax, ymax])
-        return bounding_box, image
+            cropped_image = image[bounding_box[1]:bounding_box[3], bounding_box[0]:bounding_box[2]]
+        return cropped_image
 
     def check_model(self, core):
         # Add a CPU extension, if applicable
