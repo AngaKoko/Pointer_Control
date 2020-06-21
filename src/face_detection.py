@@ -1,6 +1,7 @@
 import numpy as np
 import time
 from openvino.inference_engine import IENetwork, IECore
+import logging as log
 import os
 import cv2
 import argparse
@@ -31,6 +32,9 @@ class Model_Face_Detection:
         global net
         #load the model using IECore()
         core = IECore()
+
+        self.check_model(core)
+
         net = core.load_network(network=self.model, device_name=self.device, num_requests=1)
         
         return net
@@ -62,8 +66,21 @@ class Model_Face_Detection:
             bounding_box.append([xmin, ymin, xmax, ymax])
         return bounding_box, image
 
-    def check_model(self):
-        raise NotImplementedError
+    def check_model(self, core):
+        # Add a CPU extension, if applicable
+        if self.extensions and "CPU" in self.device:
+            core.add_extension(self.extensions, self.device)
+
+        ###: Check for supported layers ###
+        if "CPU" in self.device:
+            supported_layers = core.query_network(self.model, "CPU")
+            not_supported_layers = [l for l in self.model.layers.keys() if l not in supported_layers]
+            if len(not_supported_layers) != 0:
+                log.error("Following layers are not supported by the plugin for specified device {}:\n {}".
+                        format(self.device, ', '.join(not_supported_layers)))
+                log.error("Please try to specify cpu extensions library path in sample's command line parameters using -l "
+                        "or --cpu_extension command line argument")
+                sys.exit(1)
 
     def preprocess_input(self, image):
         #Get Input shape 

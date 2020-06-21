@@ -5,16 +5,16 @@ import os
 import cv2
 import argparse
 import sys
+import logging as log
 
-class Head_Pose_Estimation:
+class Model_Head_Pose_Estimation:
     '''
     Class for the Face Detection Model.
     '''
-    def __init__(self, model_name, device='CPU', extensions=None, threshold=0.60):
+    def __init__(self, model_name, device='CPU', extensions=None):
         self.model_weights=model_name+'.bin'
         self.model_structure=model_name+'.xml'
         self.device=device
-        self.threshold=threshold
         self.extensions = extensions
 
         try:
@@ -31,6 +31,7 @@ class Head_Pose_Estimation:
         global net
         #load the model using IECore()
         core = IECore()
+        self.check_model(core)
         net = core.load_network(network=self.model, device_name=self.device, num_requests=1)
         
         return net
@@ -51,8 +52,21 @@ class Head_Pose_Estimation:
         
         return estimation
 
-    def check_model(self):
-        raise NotImplementedError
+    def check_model(self, core):
+        # Add a CPU extension, if applicable
+        if self.extensions and "CPU" in self.device:
+            core.add_extension(self.extensions, self.device)
+
+        ###: Check for supported layers ###
+        if "CPU" in self.device:
+            supported_layers = core.query_network(self.model, "CPU")
+            not_supported_layers = [l for l in self.model.layers.keys() if l not in supported_layers]
+            if len(not_supported_layers) != 0:
+                log.error("Following layers are not supported by the plugin for specified device {}:\n {}".
+                        format(self.device, ', '.join(not_supported_layers)))
+                log.error("Please try to specify cpu extensions library path in sample's command line parameters using -l "
+                        "or --cpu_extension command line argument")
+                sys.exit(1)
 
     def preprocess_input(self, image):
         #Get Input shape 
@@ -72,7 +86,7 @@ def main(args):
     threshold=args.threshold
 
     start_model_load_time=time.time()
-    hpe = Head_Pose_Estimation(model, device, threshold)
+    hpe = Model_Head_Pose_Estimation(model, device, threshold)
     hpe.load_model()
     total_model_load_time = time.time() - start_model_load_time
     print("Total model load time = "+str(total_model_load_time))
