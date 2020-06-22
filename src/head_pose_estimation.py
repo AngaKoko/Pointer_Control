@@ -40,17 +40,17 @@ class Model_Head_Pose_Estimation:
         processed_image = self.preprocess_input(image)
         # Start asynchronous inference for specified request
         net.start_async(request_id=0,inputs={self.input_name: processed_image})
-        estimation = {}
+        estimations = []
         # Wait for the result
         if net.requests[0].wait(-1) == 0:
             #get out put
             outputs = net.infer({self.input_name:processed_image})
             
-            estimation["angle_y_fc"] = outputs['angle_y_fc'].tolist()[0][0]
-            estimation["angle_p_fc"] = outputs['angle_p_fc'].tolist()[0][0]
-            estimation["angle_r_fc"] = outputs['angle_r_fc'].tolist()[0][0]
+            estimations.append(outputs['angle_y_fc'].tolist()[0][0])
+            estimations.append(outputs['angle_p_fc'].tolist()[0][0])
+            estimations.append(outputs['angle_r_fc'].tolist()[0][0])
         
-        return estimation
+        return estimations
 
     def check_model(self, core):
         # Add a CPU extension, if applicable

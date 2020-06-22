@@ -11,6 +11,7 @@ from src.face_detection import Model_Face_Detection
 from src.facial_landmarks_detection import Model_Facial_Landmarks_Detection
 from src.gaze_estimation import Model_Gaze_Estimation
 from src.head_pose_estimation import Model_Head_Pose_Estimation
+from src.mouse_controller import MouseController
 
 def main(args):
     fd_model=args.model_face_detection
@@ -21,6 +22,8 @@ def main(args):
     video_file=args.video
     threshold=args.threshold
     extenstions = args.cpu_extensions
+
+    mc = MouseController('medium','fast')
 
     #Load all model
     #Get time it takes to load each model
@@ -82,9 +85,6 @@ def main(args):
     if input_stream:
         cap.open(video_file)
     
-    initial_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    initial_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    video_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     
     counter=0
@@ -103,27 +103,11 @@ def main(args):
 
         #Get predictions 
         image= fd.predict(frame)
-        estimation = hpm.predict(image)
-        eye_points = fldm.predict(image)
-
-        left_eye_x = eye_points[0]
-        left_eye_y = eye_points[1]
-        right_eye_x = eye_points[2]
-        right_eye_y = eye_points[3]
-
-        left_eye_x_min = int(left_eye_x - 10)
-        left_eye_x_max = int(left_eye_x + 10)
-        left_eye_y_min = int(left_eye_y - 10)
-        left_eye_y_max = int(left_eye_y + 10)
-        right_eye_x_min = int(right_eye_x - 10)
-        right_eye_x_max = int(right_eye_x + 10)
-        right_eye_y_min = int(right_eye_y - 10)
-        right_eye_y_max = int(right_eye_y + 10)
-
-        #right_eye_image = image[right_eye_y_min:right_eye_y_max, right_eye_x_min:right_eye_x_max]
-        #left_eye_image =  image[left_eye_y_min:left_eye_y_max, left_eye_x_min:left_eye_x_max]
-
-        #mouse_coordinate, gaze_vector = gem.predict(left_eye_image, right_eye_image, estimation)
+        tait_bryan_angles = hpm.predict(image)
+        left_eye_image, right_eye_image, _ = fldm.predict(image)
+        #Check if eye images were gotten from facial landmark detection model
+        if left_eye_image.size != 0 and right_eye_image.size != 0:
+            mouse_coordinate, _ = gem.predict(left_eye_image, right_eye_image, tait_bryan_angles)
 
         ### Write an output image if `single_image_mode` ###
         ### Send the frame to the FFMPEG server ###
@@ -137,6 +121,9 @@ def main(args):
             #Break if escape key pressed
             if key_pressed == 27:
                 break
+
+        if counter%5==0:
+            mc.move(mouse_coordinate[0],mouse_coordinate[1])
             
     #get total inference time and frame per second
     total_time = time.time()-start_inference_time

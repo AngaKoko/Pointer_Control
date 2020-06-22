@@ -4,6 +4,7 @@ import cv2
 import math
 import logging as log
 import sys
+import numpy as np
 
 class Model_Gaze_Estimation:
     '''
@@ -64,19 +65,23 @@ class Model_Gaze_Estimation:
                 sys.exit(1)
 
     def preprocess_input(self, image):
+        
         #Get Input shape 
-        n, c, h, w = self.model.inputs[self.input_name].shape
+        n, c = self.model.inputs[self.input_name].shape
 
         #Pre-process the image ###
-        image = cv2.resize(image, (w, h))
+        print(image)
+        image = cv2.resize(image, (60, 60))
         image = image.transpose((2, 0, 1))
-        image = image.reshape((n, c, h, w))
+        image = image.reshape((n, c, 60, 60))
         
         return image
 
     def preprocess_output(self, outputs, pose_angles):
-        gaze_vector = outputs[self.output_name[0]].tolist()[0]
-        roll_angle = pose_angles["angle_r_fc"]
+        #get gaze vector from output
+        gaze_vector = outputs["gaze_vector"][0]
+        
+        roll_angle = pose_angles[2]
         cos = math.cos(roll_angle * math.pi / 180.0)
         sin = math.sin(roll_angle * math.pi / 180.0)
         

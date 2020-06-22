@@ -37,6 +37,14 @@ Use `--name` argument for model name, `-o` argument to specify your output direc
 
     pip3 install numpy
 
+**PyAutoGUI**
+
+    pip3 install pyautogui
+
+**NOTE:** You must install tkinter on Linux to use MouseInfo. Run the following:
+
+    sudo apt-get install python3-tk python3-dev
+
 
 
 ## Demo
