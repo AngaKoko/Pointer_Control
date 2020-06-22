@@ -3,6 +3,7 @@ from openvino.inference_engine import IENetwork, IECore
 import cv2
 import math
 import logging as log
+import sys
 
 class Model_Gaze_Estimation:
     '''

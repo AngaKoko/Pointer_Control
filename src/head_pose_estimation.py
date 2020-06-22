@@ -83,10 +83,10 @@ def main(args):
     model=args.model
     device=args.device
     video_file=args.video
-    threshold=args.threshold
+    extensions = args.extensions
 
     start_model_load_time=time.time()
-    hpe = Model_Head_Pose_Estimation(model, device, threshold)
+    hpe = Model_Head_Pose_Estimation(model, device, extensions)
     hpe.load_model()
     total_model_load_time = time.time() - start_model_load_time
     print("Total model load time = "+str(total_model_load_time))
@@ -166,8 +166,9 @@ if __name__=='__main__':
     parser.add_argument("-m", '--model', default="models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001", help="location of model to be used")
     parser.add_argument("-d", '--device', default='CPU', help="device to run inference")
     parser.add_argument("-v", '--video', default="bin/demo.mp4", help="video location")
-    parser.add_argument("-e", '--extensions', default=None)
-    parser.add_argument("-pt", '--threshold', default=0.60, help="Probability threshold for model")
+    parser.add_argument("-e", '--extensions', default=None, help="MKLDNN (CPU)-targeted custom layers."
+                             "Absolute path to a shared library with the"
+                             "kernels impl.")
     
     args=parser.parse_args()
 

@@ -46,32 +46,34 @@ class Model_Facial_Landmarks_Detection:
         if net.requests[0].wait(-1) == 0:
             #get out put
             output = net.requests[0].outputs[self.output_name]
-            left_eye_point_x = output[0][0][0]
-            left_eye_point_y = output[0][2][0]
-            right_eye_poit_x = output[0][3][0]
-            right_eye_poit_y = output[0][4][0]
-
-            eye_points.append(left_eye_point_x)
-            eye_points.append(left_eye_point_y)
-            eye_points.append(right_eye_poit_x)
-            eye_points.append(right_eye_poit_y)
-          
+            print(output)
+            eye_points = self.draw_outputs(output, image)
+            print(eye_points)
+            
         return eye_points
     
-    def draw_outputs(self, coords, image):
+    def draw_outputs(self, output, image):
         #get image width and hight
         initial_h = image.shape[0]
         initial_w = image.shape[1]
-        bounding_box = []
-        for value in coords:
-            # Draw bounding box on detected objects
-            xmin = int(value[3] * initial_w)
-            ymin = int(value[4] * initial_h)
-            xmax = int(value[5] * initial_w)
-            ymax = int(value[6] * initial_h)
-            cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0,55,255), 2)
-            bounding_box.append([xmin, ymin, xmax, ymax])
-        return bounding_box, image
+        eye_points = []
+
+        left_eye_point_x = int(output[0][0][0] * initial_h)
+        left_eye_point_y = int(output[0][2][0] * initial_w)
+        right_eye_poit_x = int(output[0][3][0] * initial_h)
+        right_eye_poit_y = int(output[0][4][0] * initial_w)
+        nose_point_x = int(output[0][5][0] * initial_h)
+        nose_point_y = int(output[0][6][0] * initial_w)
+
+        eye_points.append(left_eye_point_x)
+        eye_points.append(left_eye_point_y)
+        eye_points.append(right_eye_poit_x)
+        eye_points.append(right_eye_poit_y)
+        cv2.circle(img = image, center = (left_eye_point_y, left_eye_point_x), radius = 10, color = (0,55,255), thickness=5)
+        cv2.circle(img = image, center = (right_eye_poit_x, right_eye_poit_y), radius = 10, color = (0,55,255), thickness=5)
+        cv2.circle(img = image, center = (nose_point_x, nose_point_y), radius = 10, color = (0,55,255), thickness=5)
+
+        return eye_points
 
     def check_model(self, core):
         # Add a CPU extension, if applicable
@@ -104,10 +106,10 @@ def main(args):
     model=args.model
     device=args.device
     video_file=args.video
-    threshold=args.threshold
+    extensions=args.extensions
 
     start_model_load_time=time.time()
-    fld= Model_Facial_Landmarks_Detection(model, device, threshold)
+    fld= Model_Facial_Landmarks_Detection(model, device, extensions)
     fld.load_model()
     total_model_load_time = time.time() - start_model_load_time
     print("Total model load time = "+str(total_model_load_time))
@@ -184,11 +186,12 @@ def main(args):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument("-m", '--model', default="models/intel/landmarks-regression-retail-0009/FP16/landmarks-regression-retail-0009", help="location of model to be used")
+    parser.add_argument("-m", '--model', default="models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009", help="location of model to be used")
     parser.add_argument("-d", '--device', default='CPU', help="device to run inference")
     parser.add_argument("-v", '--video', default="bin/demo.mp4", help="video location")
-    parser.add_argument("-e", '--extensions', default=None)
-    parser.add_argument("-pt", '--threshold', default=0.60, help="Probability threshold for model")
+    parser.add_argument("-e", '--extensions', default=None, help="MKLDNN (CPU)-targeted custom layers."
+                             "Absolute path to a shared library with the"
+                             "kernels impl.")
     
     args=parser.parse_args()
 

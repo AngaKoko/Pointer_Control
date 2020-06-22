@@ -42,21 +42,23 @@ class Model_Face_Detection:
     def predict(self, image):
         processed_image = self.preprocess_input(image)
         # Start asynchronous inference for specified request
+        cropped_image = image
         net.start_async(request_id=0,inputs={self.input_name: processed_image})
         # Wait for the result
         if net.requests[0].wait(-1) == 0:
             #get out put
             outputs = net.requests[0].outputs[self.output_name]
             coords = self.preprocess_output(outputs)
-            bounding_box, image = self.draw_outputs(coords, image)            
-            return bounding_box, image
+            bounding_box, image = self.draw_outputs(coords, image)
+            bounding_box = bounding_box[0] 
+            cropped_image = image[bounding_box[1]:bounding_box[3], bounding_box[0]:bounding_box[2]]         
+        return cropped_image
 
     def draw_outputs(self, coords, image):
         #get image width and hight
         initial_h = image.shape[0]
         initial_w = image.shape[1]
         bounding_box = []
-        cropped_image = image
         for value in coords:
             # Draw bounding box on detected objects
             xmin = int(value[3] * initial_w)
@@ -65,8 +67,7 @@ class Model_Face_Detection:
             ymax = int(value[6] * initial_h)
             cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0,55,255), 2)
             bounding_box.append([xmin, ymin, xmax, ymax])
-            cropped_image = image[bounding_box[1]:bounding_box[3], bounding_box[0]:bounding_box[2]]
-        return cropped_image
+        return bounding_box, image
 
     def check_model(self, core):
         # Add a CPU extension, if applicable
@@ -108,9 +109,10 @@ def main(args):
     device=args.device
     video_file=args.video
     threshold=args.threshold
+    extensions = args.extensions
 
     start_model_load_time=time.time()
-    fd= Model_Face_Detection(model, device, threshold)
+    fd= Model_Face_Detection(model, device, extensions, threshold)
     fd.load_model()
     total_model_load_time = time.time() - start_model_load_time
     print("Total model load time = "+str(total_model_load_time))
@@ -159,7 +161,7 @@ def main(args):
             #increament counter
             counter += 1
 
-            coords, image= fd.predict(frame)
+            image= fd.predict(frame)
 
             ### Write an output image if `single_image_mode` ###
             ### Send the frame to the FFMPEG server ###
@@ -194,7 +196,9 @@ if __name__=='__main__':
     parser.add_argument("-m", '--model', default="models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001", help="location of model to be used")
     parser.add_argument("-d", '--device', default='CPU', help="device to run inference")
     parser.add_argument("-v", '--video', default="bin/demo.mp4", help="video location")
-    parser.add_argument("-e", '--extensions', default=None)
+    parser.add_argument("-e", '--extensions', default=None, help="MKLDNN (CPU)-targeted custom layers."
+                             "Absolute path to a shared library with the"
+                             "kernels impl.")
     parser.add_argument("-pt", '--threshold', default=0.60, help="Probability threshold for model")
     
     args=parser.parse_args()

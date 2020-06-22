@@ -4,6 +4,7 @@ import os
 import cv2
 import argparse
 import sys
+import logging as log
 
 from openvino.inference_engine import IENetwork, IECore
 from src.face_detection import Model_Face_Detection
@@ -89,47 +90,71 @@ def main(args):
     counter=0
     start_inference_time=time.time()
 
-    try:
-        #loop until stream is over
-        while cap.isOpened:
-            #  Read from the video capture ###
-            flag, frame = cap.read()
-            if not flag:
+    #loop until stream is over
+    while cap.isOpened:
+        #  Read from the video capture ###
+        flag, frame = cap.read()
+        if not flag:
+            break
+
+        key_pressed = cv2.waitKey(50)
+        #increament counter
+        counter += 1
+
+        #Get predictions 
+        image= fd.predict(frame)
+        estimation = hpm.predict(image)
+        eye_points = fldm.predict(image)
+
+        left_eye_x = eye_points[0]
+        left_eye_y = eye_points[1]
+        right_eye_x = eye_points[2]
+        right_eye_y = eye_points[3]
+
+        left_eye_x_min = int(left_eye_x - 10)
+        left_eye_x_max = int(left_eye_x + 10)
+        left_eye_y_min = int(left_eye_y - 10)
+        left_eye_y_max = int(left_eye_y + 10)
+        right_eye_x_min = int(right_eye_x - 10)
+        right_eye_x_max = int(right_eye_x + 10)
+        right_eye_y_min = int(right_eye_y - 10)
+        right_eye_y_max = int(right_eye_y + 10)
+
+        #right_eye_image = image[right_eye_y_min:right_eye_y_max, right_eye_x_min:right_eye_x_max]
+        #left_eye_image =  image[left_eye_y_min:left_eye_y_max, left_eye_x_min:left_eye_x_max]
+
+        #mouse_coordinate, gaze_vector = gem.predict(left_eye_image, right_eye_image, estimation)
+
+        ### Write an output image if `single_image_mode` ###
+        ### Send the frame to the FFMPEG server ###
+        if single_image_mode:
+            cv2.imwrite('output_image.jpg', frame)
+        else:
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-            key_pressed = cv2.waitKey(50)
-            #increament counter
-            counter += 1
-
-            image= fd.predict(frame)
-
-            ### Write an output image if `single_image_mode` ###
-            ### Send the frame to the FFMPEG server ###
-            if single_image_mode:
-                cv2.imwrite('output_image.jpg', frame)
-            else:
-                cv2.imshow('frame', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-
-                #Break if escape key pressed
-                if key_pressed == 27:
-                    break
+            #Break if escape key pressed
+            if key_pressed == 27:
+                break
             
-        #get total inference time and frame per second
-        total_time = time.time()-start_inference_time
-        total_inference_time = round(total_time, 1)
-        fps = counter/total_inference_time
+    #get total inference time and frame per second
+    total_time = time.time()-start_inference_time
+    total_inference_time = round(total_time, 1)
+    fps = counter/total_inference_time
 
-        print("Total inference time = "+str(total_inference_time))
-        print("Frames per second = "+str(fps))
+    print("Total inference time = "+str(total_inference_time))
+    print("Frames per second = "+str(fps))
 
-        cap.release()
-        cv2.destroyAllWindows()
+    cap.release()
+    cv2.destroyAllWindows()
+
+    # try:
+        
                 
 
-    except Exception as e:
-        print("Could not run inference: ", e)
+    # except Exception as e:
+    #     print("Could not run inference: ", e)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
