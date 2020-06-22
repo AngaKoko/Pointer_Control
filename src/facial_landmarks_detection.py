@@ -38,42 +38,48 @@ class Model_Facial_Landmarks_Detection:
 
     def predict(self, image):
         
-        eye_points = []
+        left_eye = []
+        right_eye = []
         processed_image = self.preprocess_input(image)
         # Start asynchronous inference for specified request
         net.start_async(request_id=0,inputs={self.input_name: processed_image})
         # Wait for the result
         if net.requests[0].wait(-1) == 0:
             #get out put
-            output = net.requests[0].outputs[self.output_name]
-            print(output)
-            eye_points = self.draw_outputs(output, image)
-            print(eye_points)
+            outputs = net.requests[0].outputs[self.output_name]
+            outputs= outputs[0]
+            left_eye, right_eye = self.draw_outputs(outputs, image)
             
-        return eye_points
+        return left_eye, right_eye, outputs
     
-    def draw_outputs(self, output, image):
+    def draw_outputs(self, outputs, image):
         #get image width and hight
         initial_h = image.shape[0]
         initial_w = image.shape[1]
-        eye_points = []
+        
+        xl,yl = outputs[0][0]*initial_w,outputs[1][0]*initial_h
+        xr,yr = outputs[2][0]*initial_w,outputs[3][0]*initial_h
+        # make box for left eye 
+        xlmin = int(xl-20)
+        ylmin = int(yl-20)
+        xlmax = int(xl+20)
+        ylmax = int(yl+20)
+        #draw boudning box on left eye
+        cv2.rectangle(image, (xlmin, ylmin), (xlmax, ylmax), (0,55,255), 2)
+        #get left eye image
+        left_eye =  image[ylmin:ylmax, xlmin:xlmax]
+        
+        # make box for right eye 
+        xrmin = int(xr-20)
+        yrmin = int(yr-20)
+        xrmax = int(xr+20)
+        yrmax = int(yr+20)
+        #draw boinding box on right eye
+        cv2.rectangle(image, (xrmin, yrmin), (xrmax, yrmax), (0,55,255), 2)
+        #get righ eye image
+        right_eye = image[yrmin:yrmax, xrmin:xrmax]
 
-        left_eye_point_x = int(output[0][0][0] * initial_h)
-        left_eye_point_y = int(output[0][2][0] * initial_w)
-        right_eye_poit_x = int(output[0][3][0] * initial_h)
-        right_eye_poit_y = int(output[0][4][0] * initial_w)
-        nose_point_x = int(output[0][5][0] * initial_h)
-        nose_point_y = int(output[0][6][0] * initial_w)
-
-        eye_points.append(left_eye_point_x)
-        eye_points.append(left_eye_point_y)
-        eye_points.append(right_eye_poit_x)
-        eye_points.append(right_eye_poit_y)
-        cv2.circle(img = image, center = (left_eye_point_y, left_eye_point_x), radius = 10, color = (0,55,255), thickness=5)
-        cv2.circle(img = image, center = (right_eye_poit_x, right_eye_poit_y), radius = 10, color = (0,55,255), thickness=5)
-        cv2.circle(img = image, center = (nose_point_x, nose_point_y), radius = 10, color = (0,55,255), thickness=5)
-
-        return eye_points
+        return left_eye, right_eye
 
     def check_model(self, core):
         # Add a CPU extension, if applicable
