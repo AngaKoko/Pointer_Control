@@ -70,7 +70,6 @@ class Model_Gaze_Estimation:
         n, c = self.model.inputs[self.input_name].shape
 
         #Pre-process the image ###
-        print(image)
         image = cv2.resize(image, (60, 60))
         image = image.transpose((2, 0, 1))
         image = image.reshape((n, c, 60, 60))

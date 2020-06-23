@@ -18,4 +18,17 @@ class MouseController:
         self.speed=speed_dict[speed]
 
     def move(self, x, y):
-        pyautogui.moveRel(x*self.precision, -1*y*self.precision, duration=self.speed)
+        #disable pyautogui fail safe
+        pyautogui.FAILSAFE = False
+        #get screen size
+        sx, sy = pyautogui.size()
+        #get current screen position
+        px, py = pyautogui.position()
+        if px == sx:
+            pyautogui.moveRel(None, -1*y*self.precision, duration=self.speed)
+        elif py == sy:
+            pyautogui.moveRel(x*self.precision, None, duration=self.speed)
+        elif py == sy and px == sx:
+            pyautogui.moveRel(None, None, duration=self.speed)
+        else:
+            pyautogui.moveRel(x*self.precision, -1*y*self.precision, duration=self.speed)
