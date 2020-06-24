@@ -145,16 +145,16 @@ def main(args):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument("-mfd", '--model_face_detection', default="models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001", help="location of face detection model model to be used")
-    parser.add_argument("-mflm", '--model_facial_landmark', default="models/intel/landmarks-regression-retail-0009/FP16/landmarks-regression-retail-0009", help="location of facial landmark model to be used")
-    parser.add_argument("-mge", '--model_gaze_estimation', default="models/intel/gaze-estimation-adas-0002/FP16/gaze-estimation-adas-0002", help="location of gaze estimation model to be used")
-    parser.add_argument("-mhpe", '--model_head_pose_estimation', default="models/intel/head-pose-estimation-adas-0001/FP16/head-pose-estimation-adas-0001", help="location of head pose estimation model to be used")
-    parser.add_argument("-d", '--device', default='CPU', help="device to run inference")
-    parser.add_argument("-v", '--video', default="bin/demo.mp4", help="video location")
-    parser.add_argument("-l", '--cpu_extensions', default=None, help="MKLDNN (CPU)-targeted custom layers."
+    parser.add_argument("-mfd", '--model_face_detection', type=str, required=True, default="models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001", help="location of face detection model model to be used")
+    parser.add_argument("-mflm", '--model_facial_landmark', type=str, required=True, default="models/intel/landmarks-regression-retail-0009/FP16/landmarks-regression-retail-0009", help="location of facial landmark model to be used")
+    parser.add_argument("-mge", '--model_gaze_estimation', type=str, required=True, default="models/intel/gaze-estimation-adas-0002/FP16/gaze-estimation-adas-0002", help="location of gaze estimation model to be used")
+    parser.add_argument("-mhpe", '--model_head_pose_estimation', type=str, required=True, default="models/intel/head-pose-estimation-adas-0001/FP16/head-pose-estimation-adas-0001", help="location of head pose estimation model to be used")
+    parser.add_argument("-d", '--device', type=str, default='CPU', help="device to run inference")
+    parser.add_argument("-v", '--video',type=str, required=True, default="bin/demo.mp4", help="video location")
+    parser.add_argument("-l", '--cpu_extensions', type=str, required=False, default=None, help="MKLDNN (CPU)-targeted custom layers."
                              "Absolute path to a shared library with the"
                              "kernels impl.")
-    parser.add_argument("-pt", '--threshold', default=0.60, help="Probability threshold for model")
+    parser.add_argument("-pt", '--threshold', type=float, default=0.60, help="Probability threshold for model")
     
     args=parser.parse_args()
 

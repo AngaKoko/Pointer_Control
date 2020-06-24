@@ -1,9 +1,41 @@
 # Computer Pointer Controller
 
-*TODO:* Write a short introduction to your project
+This application demonstrates how to control mouse pointer on screen with eye gaze using Intel® hardware and software tools. The app will detect a person's face, facial landmark and eye gaze angel. Mouse pointer on screen will then be moved in the gaze direction.
+
+## How it Works
+
+The application uses a Face Detection model to capture a person's face, a Facial Landmark Detection Model to capture left and right eye from captured face, a Head Pose Estimation Model to get Tait-Bryan angles from captured face, and then uses a gaze estimation model to calculate new mouse coordinate from captured eyes and Tait-Bryan angles.
+
+![architectural diagram](./images/arch_diagram.png)
 
 ## Project Set Up and Installation
-*TODO:* Explain the setup procedures to run your project. For instance, this can include your project directory structure, the models you need to download and where to place them etc. Also include details about how to install the dependencies your project requires.
+
+## Requirements
+
+### Hardware
+
+* 6th to 10th generation Intel® Core™ processor with Iris® Pro graphics or Intel® HD Graphics.
+* OR use of Intel® Neural Compute Stick 2 (NCS2)
+
+### Software
+
+*   Intel® Distribution of OpenVINO™ toolkit 2020
+*   PyAutoGUI
+*   CMake
+*   NumPy
+  
+        
+## Setup
+
+### Install Intel® Distribution of OpenVINO™ toolkit
+
+Utilize the classroom workspace, or refer to the relevant instructions for your operating system for this step.
+
+- [Linux/Ubuntu](./linux-setup.md)
+- [Mac](./mac-setup.md)
+- [Windows](./windows-setup.md)
+
+## Models to use
 
 For this project we will be using 4 models: 
 
@@ -18,19 +50,19 @@ Use `--name` argument for model name, `-o` argument to specify your output direc
 
 **Download Face Detection model**
 
-    sudo ./downloader.py --name face-detection-adas-binary-0001 -o /home/anga/Documents/Pointer_Control/models
+    sudo ./downloader.py --name face-detection-adas-binary-0001 -o /home/user/Documents/Pointer_Control/models
 
 **Download Head Pose Estimation model**
 
-    sudo ./downloader.py --name head-pose-estimation-adas-0001 -o /home/anga/Documents/Pointer_Control/models
+    sudo ./downloader.py --name head-pose-estimation-adas-0001 -o /home/user/Documents/Pointer_Control/models
 
 **Download Facial Landmarks Detection model**
 
-    sudo ./downloader.py --name landmarks-regression-retail-0009 -o /home/anga/Documents/Pointer_Control/models
+    sudo ./downloader.py --name landmarks-regression-retail-0009 -o /home/user/Documents/Pointer_Control/models
     
 **Download Gaze Estimation model**
 
-    sudo ./downloader.py --name gaze-estimation-adas-0002 -o /home/anga/Documents/Pointer_Control/models
+    sudo ./downloader.py --name gaze-estimation-adas-0002 -o /home/user/Documents/Pointer_Control/models
 
 ## Install Dependencies
 **Numpy**
@@ -47,23 +79,45 @@ Use `--name` argument for model name, `-o` argument to specify your output direc
 
 
 
-## Demo
-*TODO:* Explain how to run a basic demo of your model.
+## Run APP
+Run the app from `main.py` file. 
+You need to parse in required arguments for model and video location. 
+Arguments to parse while running the app are:
 
-## Documentation
-*TODO:* Include any documentation that users might need to better understand your project code. For instance, this is a good place to explain the command line arguments that your project supports.
+* `-mfd`: location of Face Detection Model. `Required`
+* `-mflm`: location of Facecial Landmark Detection Model `Required`
+* `-mge`: Location of Gaze Estimation Model `Required`
+* `-mhpe`: Location of Head Pose Estimation Model `Required`
+* `-d`: Device to run inference. `default = "CPU"`
+* `-v`: Location of video to use for inference 
+* `-l`: CPU extensions
+* `-pt`: Probability Threshold for Face Detection Model
+
+Your command to run the app should look like this:
+
+    python3 main.py -mfd models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001 -mflm models/intel/landmarks-regression-retail-0009/FP16/landmarks-regression-retail-0009 -mge models/intel/gaze-estimation-adas-0002/FP16/gaze-estimation-adas-0002 -mhpe models/intel/head-pose-estimation-adas-0001/FP16/head-pose-estimation-adas-0001 -d CPU -v bin/demo.mp4 -pt 0.60
+
 
 ## Benchmarks
-*TODO:* Include the benchmark results of running your model on multiple hardwares and multiple model precisions. Your benchmarks can include: model loading time, input/output processing time, model inference time etc.
+The table below shows load time of the different models with different precisions on **Intel CORE i7 device**. **Face Detection Model** uses a precision of **FP32** with an average load time of **0.18 seconds**. This will be added across other models precision to get total load time.
+
+| | FP16 | FP16-INT8 | FP32 |
+|------| ------ | ------ | ------ |
+|Landmarks-regression-retail-0009 load time| 0.075 | 0.229 | 0.191 |
+|Gaze-estimation-adas-0002 load time| 0.121 | 0.264 | 0.321 |
+|Head-pose-estimation-adas-0001 load time | 0.097 | 0.237 | 0.242 |
+|**Total Load time**| **0.479** | **0.909** | **0.943** |
+
+***Table 1: Load time of models in seconds***
+
+**Average Inference time is 208 seconds 
+Average frames per second is 2.8 seconds**
 
 ## Results
-*TODO:* Discuss the benchmark results and explain why you are getting the results you are getting. For instance, explain why there is difference in inference time for FP32, FP16 and INT8 models.
+It takes less time to load models using FP16 precision. App accuracy, Inference time and Frames per second is the same across all model precisions. It is recommended to use FP32 for Face Detection model and FP16 precision for the other models
 
 ## Stand Out Suggestions
-This is where you can provide information about the stand out suggestions that you have attempted.
-
-### Async Inference
-If you have used Async Inference in your code, benchmark the results and explain its effects on power and performance of your project.
+For further investigation, you can use [Deep Learning Workbench](https://docs.openvinotoolkit.org/latest/_docs_Workbench_DG_Install_from_Package.html) to get model performance summary, and [VTune Amplifier](https://software.intel.com/content/www/us/en/develop/tools/vtune-profiler.html) to measure hot spots in your application code
 
 ### Edge Cases
 Some situations where inference may break are:

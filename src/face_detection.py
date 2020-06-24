@@ -98,6 +98,7 @@ class Model_Face_Detection:
 
     def preprocess_output(self, outputs):
         bounding_box = []
+        
         for value in outputs[0][0]:
             #check if confidence is greater than probability threshold
             if value[2] > self.threshold:
@@ -199,7 +200,7 @@ if __name__=='__main__':
     parser.add_argument("-e", '--extensions', default=None, help="MKLDNN (CPU)-targeted custom layers."
                              "Absolute path to a shared library with the"
                              "kernels impl.")
-    parser.add_argument("-pt", '--threshold', default=0.60, help="Probability threshold for model")
+    parser.add_argument("-pt", '--threshold', default=0.60, type=float, help="Probability threshold for model")
     
     args=parser.parse_args()
 
