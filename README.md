@@ -6,7 +6,7 @@ This application demonstrates how to control mouse pointer on screen with eye ga
 
 The application uses a Face Detection model to capture a person's face, a Facial Landmark Detection Model to capture left and right eye from captured face, a Head Pose Estimation Model to get Tait-Bryan angles from captured face, and then uses a gaze estimation model to calculate new mouse coordinate from captured eyes and Tait-Bryan angles.
 
-![architectural diagram](./images/arch_diagram.png)
+![architectural diagram](./images/arch_diagram.jpg)
 
 ## Project Set Up and Installation
 
