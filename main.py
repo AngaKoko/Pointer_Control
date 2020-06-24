@@ -90,58 +90,54 @@ def main(args):
     counter=0
     start_inference_time=time.time()
 
-    #loop until stream is over
-    while cap.isOpened:
-        #  Read from the video capture ###
-        flag, frame = cap.read()
-        if not flag:
-            break
-
-        key_pressed = cv2.waitKey(50)
-        #increament counter
-        counter += 1
-
-        #Get predictions 
-        image= fd.predict(frame)
-        tait_bryan_angles = hpm.predict(image)
-        left_eye_image, right_eye_image, _ = fldm.predict(image)
-        #Check if eye images were gotten from facial landmark detection model
-        if left_eye_image.size != 0 and right_eye_image.size != 0:
-            mouse_coordinate, _ = gem.predict(left_eye_image, right_eye_image, tait_bryan_angles)
-
-        ### Write an output image if `single_image_mode` ###
-        ### Send the frame to the FFMPEG server ###
-        if single_image_mode:
-            cv2.imwrite('output_image.jpg', frame)
-        else:
-            cv2.imshow('frame', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+    try:
+        #loop until stream is over
+        while cap.isOpened:
+            #  Read from the video capture ###
+            flag, frame = cap.read()
+            if not flag:
                 break
 
-            #Break if escape key pressed
-            if key_pressed == 27:
-                break
+            key_pressed = cv2.waitKey(50)
+            #increament counter
+            counter += 1
 
-        if counter%5==0:
-            mc.move(mouse_coordinate[0],mouse_coordinate[1])
-            
-    #get total inference time and frame per second
-    total_time = time.time()-start_inference_time
-    total_inference_time = round(total_time, 1)
-    fps = counter/total_inference_time
+            #Get predictions 
+            image= fd.predict(frame)
+            tait_bryan_angles = hpm.predict(image)
+            left_eye_image, right_eye_image, _ = fldm.predict(image)
+            #Check if eye images were gotten from facial landmark detection model
+            if left_eye_image.size != 0 and right_eye_image.size != 0:
+                mouse_coordinate, _ = gem.predict(left_eye_image, right_eye_image, tait_bryan_angles)
 
-    print("Total inference time = "+str(total_inference_time))
-    print("Frames per second = "+str(fps))
+            ### Write an output image if `single_image_mode` ###
+            ### Send the frame to the FFMPEG server ###
+            if single_image_mode:
+                cv2.imwrite('output_image.jpg', frame)
+            else:
+                cv2.imshow('frame', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
-    cap.release()
-    cv2.destroyAllWindows()
+                #Break if escape key pressed
+                if key_pressed == 27:
+                    break
 
-    # try:
-        
+            if counter%5==0:
+                mc.move(mouse_coordinate[0],mouse_coordinate[1])
                 
+        #get total inference time and frame per second
+        total_time = time.time()-start_inference_time
+        total_inference_time = round(total_time, 1)
+        fps = counter/total_inference_time
 
-    # except Exception as e:
-    #     print("Could not run inference: ", e)
+        print("Total inference time = "+str(total_inference_time))
+        print("Frames per second = "+str(fps))
+
+        cap.release()
+        cv2.destroyAllWindows()
+    except Exception as e:
+        print("Could not run inference: ", e)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
